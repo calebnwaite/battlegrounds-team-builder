@@ -1,0 +1,14 @@
+import {readFileSync, writeFileSync} from 'node:fs';
+import {createHash} from 'node:crypto';
+import {plainText} from '../public/model.js';
+const source = process.argv[2];
+if (!source) throw new Error('Pass the downloaded build 255790 cards.json path. See README.');
+const raw = readFileSync(source);
+const expected = '06e61ce4afd2bce9c2ff53de8c2c1cc0080df27aa4743c8eee3d63894d10dc04';
+if (createHash('sha256').update(raw).digest('hex') !== expected) throw new Error('Source SHA256 does not match pinned build; catalog not written.');
+const cards = JSON.parse(raw.toString());
+const minions = cards.filter(c => c.type === 'MINION' && c.isBattlegroundsPoolMinion && !c.battlegroundsNormalDbfId);
+const trinkets = cards.filter(c => c.type === 'BATTLEGROUND_TRINKET' && ['LESSER_TRINKET', 'GREATER_TRINKET'].includes(c.spellSchool) && !['BG30_Trinket_1st', 'BG30_Trinket_2nd'].includes(c.id));
+const clean = c => ({id:c.id, name:c.name, description:plainText(c.text), types:c.races ?? (c.race ? [c.race] : []), ...(c.type === 'MINION' ? {tier:c.techLevel, duos:Boolean(c.isBattlegroundsDuosExclusive)} : {kind:c.spellSchool === 'LESSER_TRINKET' ? 'Lesser' : 'Greater', cost:c.cost ?? null})});
+writeFileSync(new URL('../public/catalog.json', import.meta.url), JSON.stringify({minions:minions.map(clean),trinkets:trinkets.map(clean)}));
+console.log(`Extracted ${minions.length} minions and ${trinkets.length} trinkets.`);

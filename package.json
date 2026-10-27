@@ -1,0 +1,1 @@
+{"name":"tavern-workshop","private":true,"type":"module","scripts":{"start":"node scripts/server.js","test":"node --test tests/model.test.js","lint":"eslint .","typecheck":"tsc","test:browser":"playwright test"},"devDependencies":{"@eslint/js":"9.39.1","@playwright/test":"1.56.1","eslint":"9.39.1","typescript":"5.9.3","@types/node":"22.19.0"}}
