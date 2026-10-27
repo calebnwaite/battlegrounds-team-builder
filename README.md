@@ -20,7 +20,7 @@ Images load from HearthstoneJSON and optional fonts from Google; offline or unav
 
 ## Development and verification
 
-With npm available: `npm ci`, then `npx playwright install chromium`. Run `npm test`, `npm run lint`, `npm run typecheck`, and `npm run test:browser`. The browser suite starts its own server on unused loopback port 4319 and shuts it down; do not run another app there. `npm test` is the full unit suite. Browser tests block external artwork/fonts for deterministic image-failure coverage.
+With npm available: `npm ci`, then `npx playwright install chromium`. Run `npm test`, `npm run lint`, `npm run typecheck`, and `npm run test:browser`. The browser suite starts its own server on unused loopback port 4319 and shuts it down; do not run another app there. `npm test` is the full unit suite. `tests/browser.test.js` blocks external artwork/fonts for deterministic image-failure coverage. The separate `tests/external-images.test.js` requires internet access and checks actual decoded artwork (`naturalWidth > 0`) for minion BG20_100 and trinkets BG30_MagicItem_301/BG30_MagicItem_310, with a 30-second decode timeout per sample. It attaches decoded screenshots and sample-specific network outcomes; live service/network failures are not silently skipped. Both files run with `npm run test:browser`.
 
 On the development computer npm was absent from PATH; a local ignored bootstrap was downloaded from https://registry.npmjs.org/npm/-/npm-10.9.2.tgz and unpacked into `.tools`. Equivalent npm invocation there is `node .tools/package/bin/npm-cli.js <command>`. This bootstrap is not required for launching or shipped as project source. Standard Node/npm installation elsewhere is sufficient.
 
