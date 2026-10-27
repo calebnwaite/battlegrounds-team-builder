@@ -31,7 +31,10 @@ for (const {id,pool} of samples) test(`external artwork decodes: ${id}`,async({p
     const tile = page.locator('.pool-card').filter({has:page.getByRole('heading',{name:card.name,exact:true})});
     await expect(tile).toHaveCount(1);
     await tile.scrollIntoViewIfNeeded();
-    await expect.poll(async()=>tile.locator('img').evaluateAll(images=>images.some(image=>image.complete && image.naturalWidth>0)),{
+    await expect.poll(async()=>tile.locator('img').evaluateAll(images=>images.some(image=>{
+      const img = /** @type {HTMLImageElement} */ (image);
+      return img.complete && img.naturalWidth>0;
+    })),{
       timeout:30000,
       message:`Known artwork ${id} must decode with naturalWidth > 0; check image API reachability or asset removal`,
     }).toBe(true);
