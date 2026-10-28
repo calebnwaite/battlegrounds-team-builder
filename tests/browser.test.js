@@ -4,6 +4,18 @@ test.beforeEach(async({page})=>{
   await page.route('https://fonts.googleapis.com/**',route=>route.abort());
   await page.goto('/'); await expect(page.locator('#result-count')).toContainText('303 minions');
 });
+test('dated season evidence stays separate from historical catalog eligibility',async({page})=>{
+  const notice = page.locator('.notice');
+  await expect(notice).toContainText('Checked October 28, 2026');
+  await expect(notice).toContainText('known removed cards, including Naga and Kaleidoscope');
+  await expect(notice).toContainText('Complete active-pool coverage and individual mode eligibility are not verified');
+  await expect(notice.getByRole('link',{name:'Season 14 includes Trinkets'})).toHaveAttribute('href','https://hearthstone.blizzard.com/en-us/news/24290433/announcing-battlegrounds-season-14-dark-gifts-of-dalaran');
+  await expect(notice.getByRole('link',{name:'Official rotation changes'})).toHaveAttribute('href','https://hearthstone.blizzard.com/en-us/news/24302091/aberrations-join-battlegrounds-at-blizzcon');
+  await page.getByLabel('Tribe / type').selectOption('NAGA');
+  await expect(page.locator('.pool-card')).toHaveCount(24);
+  await expect(page.locator('#result-count')).toContainText('historical catalog');
+});
+
 test('search and combined filters, no matches and reset, trinket type without tier',async({page})=>{
   await page.getByLabel('Search name or description').fill('blood gem');
   await page.getByLabel('Tribe / type').selectOption('QUILBOAR');
