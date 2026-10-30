@@ -1,4 +1,5 @@
-import {matches, add, remove, move} from './model.js';
+import {matches, add, remove, move, applyRemovals} from './model.js';
+import {REMOVED_BY_ID, removalNote} from './removals.js';
 const el = id => document.getElementById(id);
 const board = Array(7).fill(null), trinkets = Array(2).fill(null);
 /** @type {{minions: import('./model.js').Card[], trinkets: import('./model.js').Card[]}} */
@@ -74,7 +75,7 @@ const value = id => /** @type {HTMLInputElement} */ (el(id)).value;
 function renderPool() {
   if (!catalog) return;
   const filtered = catalog[active].filter(c => matches(c, {query:value('query'), ...(active === 'minions' ? {tribe:value('tribe'),tier:value('tier')} : {kind:value('kind')})}));
-  el('result-count').textContent = `${filtered.length} ${active} found · ${catalog[active].length} in this historical catalog`;
+  el('result-count').textContent = `${filtered.length} ${active} found · ${catalog[active].length} in the catalog minus announced removals`;
   const fragment = document.createDocumentFragment();
   filtered.forEach(card => {
     const article = node('article', 'pool-card');
@@ -103,7 +104,7 @@ renderSelections();
 try {
   const response = await fetch('catalog.json');
   if (!response.ok) throw new Error(`Catalog HTTP ${response.status}`);
-  catalog = await response.json();
+  catalog = applyRemovals(await response.json(), REMOVED_BY_ID);
   const types = [...new Set(catalog.minions.flatMap(c => c.types))].sort();
   for (const type of types) {const option = node('option','',type); option.setAttribute('value',String(type)); el('tribe').append(option);}
   for (let tier=1;tier<=7;tier++) {const option=node('option','',`Tier ${tier}`);option.setAttribute('value',String(tier));el('tier').append(option);}

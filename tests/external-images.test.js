@@ -25,7 +25,7 @@ for (const {id,pool} of samples) test(`external artwork decodes: ${id}`,async({p
   });
   try {
     await page.goto('/');
-    await expect(page.locator('#result-count')).toContainText('303 minions');
+    await expect(page.locator('#result-count')).toContainText('279 minions');
     if(pool==='trinkets') await page.getByRole('button',{name:'Trinkets',exact:true}).click();
     await page.getByLabel('Search name or description').fill(card.name);
     const tile = page.locator('.pool-card').filter({has:page.getByRole('heading',{name:card.name,exact:true})});

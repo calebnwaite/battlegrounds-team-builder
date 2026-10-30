@@ -41,3 +41,25 @@ test('board and trinket selections are independent',()=>{
   add(board,data.minions[0]);assert.ok(trinkets.every(c=>c===null));
   add(trinkets,data.trinkets[0]);remove(board,0);assert.equal(trinkets[0],data.trinkets[0]);
 });
+import {REMOVED_BY_ID,REMOVAL_GROUPS,removalNote} from '../public/removals.js';
+import {applyRemovals} from '../public/model.js';
+test('announced removals: every listed id is in the catalog with its official source',()=>{
+  const ids=new Set([...data.minions,...data.trinkets].map(c=>c.id));
+  for(const group of REMOVAL_GROUPS){assert.match(group.url,/^https:\/\/hearthstone\.blizzard\.com\//);assert.ok(group.date&&group.reason);for(const [id] of group.cards)assert.ok(ids.has(id),id);}
+  assert.equal(REMOVED_BY_ID.size,31);
+});
+test('removals drop every Naga, Kaleidoscope and Errgl Sticker from the default pool',()=>{
+  const pool=applyRemovals(data,REMOVED_BY_ID);
+  assert.equal(pool.minions.length,279);assert.equal(pool.trinkets.length,411);
+  assert.equal(pool.trinkets.filter(c=>c.kind==='Lesser').length,198);assert.equal(pool.trinkets.filter(c=>c.kind==='Greater').length,213);
+  assert.ok(data.minions.filter(c=>c.types.includes('NAGA')).every(c=>REMOVED_BY_ID.has(c.id)));
+  assert.equal(pool.minions.filter(c=>c.types.includes('NAGA')).length,0);
+  assert.equal(pool.trinkets.filter(c=>/Kaleidoscope|Errgl Sticker/.test(c.name)).length,0);
+  assert.equal(data.minions.length,303);
+});
+test('a removed card held in a slot keeps working and is flagged; pool cards are not',()=>{
+  const naga=data.minions.find(c=>c.types.includes('NAGA')),slots=Array(7).fill(null);
+  assert.ok(add(slots,naga));assert.ok(move(slots,0,1));assert.ok(remove(slots,1));
+  assert.match(removalNote(naga),/^Removed from the pool: Naga rotated out/);
+  assert.equal(removalNote(data.minions.find(c=>!REMOVED_BY_ID.has(c.id))),'');
+});

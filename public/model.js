@@ -27,3 +27,9 @@ export function move(slots, index, delta) {
   [slots[index], slots[target]] = [slots[target], slots[index]];
   return true;
 }
+/** Splits a catalog into the default pool by dropping officially removed cards.
+ * @param {{minions: Card[], trinkets: Card[]}} catalog @param {Map<string, unknown>} removed */
+export function applyRemovals(catalog, removed) {
+  const keep = (/** @type {Card[]} */ cards) => cards.filter(card => !removed.has(card.id));
+  return {minions: keep(catalog.minions), trinkets: keep(catalog.trinkets)};
+}

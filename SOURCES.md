@@ -1,6 +1,10 @@
 # Source and freshness review
 
-Checked October 28, 2026. This is a historical composition sandbox, not an active-pool validator. The pinned build's 303 minions and 418 trinkets are catalog counts, **not** current-season counts.
+Checked October 28 and updated October 30, 2026. The default pool is **the pinned catalog minus officially announced removals as of October 30, 2026; other changes may be missed.** The pinned build's 303 minions and 418 trinkets are catalog counts; after removals the picker offers 279 minions and 411 trinkets. This is not an active-pool validator.
+
+## Applied removals
+
+`public/removals.js` lists each removed card id with its official URL and date; `catalog.json` is never edited. Removed: all 24 Naga-type minions (Aberrations update, announced September 12, effective September 22) and seven trinkets from that article's Removed Lesser/Greater Trinkets lists: Automaton Portrait, Errgl Sticker, both Kaleidoscope variants, Avalanche Sticker, Amplifying Essence and Assembler Portrait. Matching is by unique card name; the catalog's Lesser/Greater label for four of them differs from the article's section, which does not change the removal. The other minions in that article's Removed Minions list, and the 36.6.3 removals (Briarback Drummer, Timewarped Thorncaller), are already absent from the catalog's pool flag. The 36.6.3 notes list no removed trinkets. A removed card still held in a slot keeps working and shows a visible removal flag.
 
 ## Official seasonal evidence
 
@@ -16,7 +20,7 @@ The official news index reviewed through October 20 still identifies Season 14 a
 
 The official [Battlegrounds card library](https://hearthstone.blizzard.com/en-us/battlegrounds/) rendered “No results found in Battlegrounds” during this review. That is an unavailable verification source, not evidence of an empty pool. The patch articles are incremental changes rather than a complete machine-readable current roster.
 
-The pinned HearthstoneJSON catalog contains 24 minions with the Naga type, both Kaleidoscope variants and Greater Errgl Sticker despite the official rotation/removal notices. Thus it demonstrably includes entries outside the announced active pool. Trinket availability as a seasonal mechanic is verified; exhaustive active Lesser/Greater membership, lobby-specific eligibility, later hotfixes and full artwork coverage are **not verified**. No current-only filter or fabricated active flag is supplied. Tier 7 and Duos entries are retained and labeled; selection does not imply legality.
+The newest HearthstoneJSON build (checked October 30, still 255790) contains the Naga minions and removed trinkets despite the official notices, hence the exclusion list above. Trinket availability as a seasonal mechanic is verified; exhaustive active Lesser/Greater membership, lobby-specific eligibility, later hotfixes and full artwork coverage are **not verified**. No fabricated active flag is supplied; only announced removals are subtracted. Tier 7 and Duos entries are retained and labeled; selection does not imply legality.
 
 ## Data and artwork
 

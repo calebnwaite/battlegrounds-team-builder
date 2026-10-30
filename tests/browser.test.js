@@ -2,18 +2,25 @@ import {test,expect} from '@playwright/test';
 test.beforeEach(async({page})=>{
   await page.route('https://art.hearthstonejson.com/**',route=>route.abort());
   await page.route('https://fonts.googleapis.com/**',route=>route.abort());
-  await page.goto('/'); await expect(page.locator('#result-count')).toContainText('303 minions');
+  await page.goto('/'); await expect(page.locator('#result-count')).toContainText('279 minions');
 });
-test('dated season evidence stays separate from historical catalog eligibility',async({page})=>{
+test('pool is the catalog minus announced removals, dated and sourced',async({page})=>{
   const notice = page.locator('.notice');
-  await expect(notice).toContainText('Checked October 28, 2026');
-  await expect(notice).toContainText('known removed cards, including Naga and Kaleidoscope');
-  await expect(notice).toContainText('Complete active-pool coverage and individual mode eligibility are not verified');
+  await expect(notice).toContainText('minus officially announced removals as of October 30, 2026; other changes may be missed');
+  await expect(notice).toContainText('not verified');
   await expect(notice.getByRole('link',{name:'Season 14 includes Trinkets'})).toHaveAttribute('href','https://hearthstone.blizzard.com/en-us/news/24290433/announcing-battlegrounds-season-14-dark-gifts-of-dalaran');
-  await expect(notice.getByRole('link',{name:'Official rotation changes'})).toHaveAttribute('href','https://hearthstone.blizzard.com/en-us/news/24302091/aberrations-join-battlegrounds-at-blizzcon');
-  await page.getByLabel('Tribe / type').selectOption('NAGA');
-  await expect(page.locator('.pool-card')).toHaveCount(24);
-  await expect(page.locator('#result-count')).toContainText('historical catalog');
+  await expect(notice.getByRole('link',{name:'official rotation changes'})).toHaveAttribute('href','https://hearthstone.blizzard.com/en-us/news/24302091/aberrations-join-battlegrounds-at-blizzcon');
+  await expect(page.locator('#result-count')).toContainText('minus announced removals');
+  await expect(page.locator('#tribe option[value="NAGA"]')).toHaveCount(0);
+  await page.getByLabel('Search name or description').fill('Waverider');
+  await expect(page.locator('.pool-card')).toHaveCount(0);
+  await page.getByLabel('Search name or description').fill('');
+  await page.getByRole('button',{name:'Trinkets',exact:true}).click();
+  await expect(page.locator('#result-count')).toContainText('411 trinkets');
+  for(const name of ['Kaleidoscope','Errgl Sticker']){
+    await page.getByLabel('Search name or description').fill(name);
+    await expect(page.locator('.pool-card')).toHaveCount(0);
+  }
 });
 
 test('search and combined filters, no matches and reset, trinket type without tier',async({page})=>{
@@ -25,16 +32,16 @@ test('search and combined filters, no matches and reset, trinket type without ti
   await page.getByLabel('Search name or description').fill('zzzznomatch');
   await expect(page.locator('.no-results')).toBeVisible();
   await page.getByRole('button',{name:'Reset filters'}).click();
-  await expect(page.locator('.pool-card')).toHaveCount(303);
+  await expect(page.locator('.pool-card')).toHaveCount(279);
   await page.getByRole('button',{name:'Trinkets',exact:true}).click();
   await expect(page.getByLabel('Tavern tier')).toBeHidden();
   await page.getByLabel('Trinket type').selectOption('Greater');
-  await expect(page.locator('.pool-card')).toHaveCount(218);
+  await expect(page.locator('.pool-card')).toHaveCount(213);
   await page.getByLabel('Search name or description').fill('portrait');
-  const count=await page.locator('.pool-card').count();expect(count).toBeGreaterThan(0);expect(count).toBeLessThan(218);
+  const count=await page.locator('.pool-card').count();expect(count).toBeGreaterThan(0);expect(count).toBeLessThan(213);
   await expect(page.locator('.pool-card').first().locator('.card-meta')).toContainText('Greater trinket · Cost');
   await expect(page.locator('.pool-card').first().locator('.card-meta')).not.toContainText('Tier');
-  await page.getByRole('button',{name:'Reset filters'}).click();await expect(page.locator('.pool-card')).toHaveCount(418);
+  await page.getByRole('button',{name:'Reset filters'}).click();await expect(page.locator('.pool-card')).toHaveCount(411);
 });
 test('seven and two fixed slots, limits, reorder, removal and independent clear',async({page})=>{
   await expect(page.locator('#board .slot')).toHaveCount(7);await expect(page.locator('#trinket-slots .slot')).toHaveCount(2);
