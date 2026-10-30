@@ -37,6 +37,8 @@ function cardContent(card) {
   body.append(node('h3', '', card.name));
   const meta = card.kind ? `${card.kind} trinket · Cost ${card.cost ?? 'unknown'}` : `Tier ${card.tier} · ${card.types.join(' / ') || 'No tribe'}${card.duos ? ' · Duos only' : ''}`;
   body.append(node('div', 'card-meta', meta), node('p', 'description', card.description || 'No description.'));
+  const removed = removalNote(card);
+  if (removed) body.append(node('p', 'removed-flag', removed));
   return body;
 }
 function moveBoard(index, delta) {
