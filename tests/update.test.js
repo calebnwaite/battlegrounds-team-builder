@@ -1,4 +1,7 @@
 import test from 'node:test';
+import {spawnSync} from 'node:child_process';
+import {fileURLToPath} from 'node:url';
+import {parseArgs} from '../scripts/lib/args.js';
 import assert from 'node:assert/strict';
 import {mkdtempSync, mkdirSync, readFileSync, existsSync, writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
@@ -135,4 +138,16 @@ test('the committed pin has a SHA256 and the catalog is non-empty', () => {
   assert.ok(Number.isInteger(info.build));
   const catalog = JSON.parse(readFileSync(new URL('../public/catalog.json', import.meta.url), 'utf8'));
   assert.ok(catalog.minions.length > 0 && catalog.trinkets.length > 0);
+});
+
+test('parseArgs accepts the documented flags and rejects anything else (a dry run must never write)', () => {
+  assert.deepEqual(parseArgs([]), {check: false, summary: null});
+  assert.deepEqual(parseArgs(['--check', '--summary', 'out.md']), {check: true, summary: 'out.md'});
+  for (const bad of [['--check;'], ['--chek'], ['check'], ['--check', 'extra'], ['--summary'], ['--summary', '--check']]) assert.throws(() => parseArgs(bad), /Unknown argument|needs a file path/, bad.join(' '));
+});
+
+test('update.js exits non-zero with usage on an unknown argument, before touching the network or files', () => {
+  const result = spawnSync(process.execPath, [fileURLToPath(new URL('../scripts/update.js', import.meta.url)), '--check;'], {encoding: 'utf8'});
+  assert.equal(result.status, 2);
+  assert.match(result.stderr, /Unknown argument: "--check;"[\s\S]*Usage:/);
 });

@@ -51,7 +51,7 @@ node scripts/update.js --check   # dry run: report only, writes nothing
 node scripts/update.js           # update the catalog and pin
 ```
 
-Exit code 0 means no change or a successful update; non-zero means an error (network failure, unexpected index format, an empty result), reported on stderr. The footer build number comes from `public/build.json`.
+Unknown arguments are rejected (exit 2 with a usage message) so a mistyped dry run can never write. Exit code 0 means no change or a successful update; non-zero means an error (network failure, unexpected index format, an empty result), reported on stderr. The footer build number comes from `public/build.json`.
 
 **Overrides stay manual.** `public/removals.js` is never written by the update. If it lists an id that is no longer in the catalog, the script and the tests warn but do not fail. **Pool rotation cannot be detected from HearthstoneJSON** (removed Naga, for example, still appear in the data), so `removals.js` must be updated by hand from official Blizzard patch notes, with the official URL and date for each entry.
 
