@@ -42,7 +42,7 @@ test('search and combined filters, no matches and reset, trinket type without ti
   await page.getByRole('button',{name:'Trinkets',exact:true}).click();
   await expect(page.getByLabel('Tavern tier')).toBeHidden();
   await page.getByLabel('Trinket type').selectOption('Greater');
-  await expect(page.locator('.pool-card')).toHaveCount(213);
+  await expect(page.locator('.pool-card')).toHaveCount(greaterCount);
   await page.getByLabel('Search name or description').fill('portrait');
   const count=await page.locator('.pool-card').count();expect(count).toBeGreaterThan(0);expect(count).toBeLessThan(greaterCount);
   await expect(page.locator('.pool-card').first().locator('.card-meta')).toContainText('Greater trinket · Cost');
