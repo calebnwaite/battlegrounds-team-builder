@@ -1,5 +1,7 @@
 import {readFileSync} from 'node:fs';
 import {test,expect} from '@playwright/test';
+import {applyRemovals} from '../public/model.js';
+import {REMOVED_BY_ID} from '../public/removals.js';
 
 const catalog = JSON.parse(readFileSync(new URL('../public/catalog.json',import.meta.url),'utf8'));
 const samples = [
@@ -25,7 +27,7 @@ for (const {id,pool} of samples) test(`external artwork decodes: ${id}`,async({p
   });
   try {
     await page.goto('/');
-    await expect(page.locator('#result-count')).toContainText('279 minions');
+    await expect(page.locator('#result-count')).toContainText(`${applyRemovals(catalog,REMOVED_BY_ID).minions.length} minions`);
     if(pool==='trinkets') await page.getByRole('button',{name:'Trinkets',exact:true}).click();
     await page.getByLabel('Search name or description').fill(card.name);
     const tile = page.locator('.pool-card').filter({has:page.getByRole('heading',{name:card.name,exact:true})}).filter({has:page.locator(`img[src$="/${id}.jpg"]`)});

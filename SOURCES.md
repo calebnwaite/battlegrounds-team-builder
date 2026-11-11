@@ -25,3 +25,7 @@ The newest HearthstoneJSON build (checked October 30, still 255790) contains the
 ## Data and artwork
 
 See README for the pinned build URL, hash, extraction rules and reproduction. HearthstoneJSON/HearthSim supplies data and square artwork; Blizzard owns the game content. No HSReplay data, layout or assets are extracted. Successful representative image decoding does not certify all 721 catalog assets. Offline/error artwork remains an explicitly tested fallback.
+
+## Keeping data current
+
+`scripts/update.js` (see README) updates the catalog and pin in `public/build.json` from the newest HearthstoneJSON build, and the weekly workflow proposes the result as a pull request. HearthstoneJSON cannot tell us which cards rotated out of the Battlegrounds pool, so `public/removals.js` remains a manual list built from official Blizzard patch notes; the freshness review above must be repeated by a person when notes are published. The review above describes the originally pinned build 255790; after an update the build number, hash and dates are in `public/build.json` and the pull request summary.

@@ -103,6 +103,15 @@ function bindClear(id, slots) {el(id).addEventListener('click', () => {slots.fil
 bindClear('clear-board',board);
 bindClear('clear-trinkets',trinkets);
 renderSelections();
+/** Footer build line comes from build.json, which the update script rewrites. */
+async function showBuildInfo() {
+  try {
+    const response = await fetch('build.json');
+    if (!response.ok) throw new Error(`Build info HTTP ${response.status}`);
+    const info = await response.json();
+    el('build-info').textContent = `${info.build}, retrieved ${info.retrieved}`;
+  } catch (error) {console.error('Build info unavailable:',error);}
+}
 try {
   const response = await fetch('catalog.json');
   if (!response.ok) throw new Error(`Catalog HTTP ${response.status}`);
@@ -110,5 +119,6 @@ try {
   const types = [...new Set(catalog.minions.flatMap(c => c.types))].sort();
   for (const type of types) {const option = node('option','',type); option.setAttribute('value',String(type)); el('tribe').append(option);}
   for (let tier=1;tier<=7;tier++) {const option=node('option','',`Tier ${tier}`);option.setAttribute('value',String(tier));el('tier').append(option);}
+  await showBuildInfo();
   renderPool(); announce('Catalog ready. Add pieces to start building.');
 } catch (error) {console.error('Catalog loading failed:',error);announce('Could not load the catalog. Check the server log and reload the page.');}

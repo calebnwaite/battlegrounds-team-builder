@@ -2,3 +2,4 @@ node_modules/
 .tools/
 test-results/
 playwright-report/
+update-summary.md

@@ -1,8 +1,14 @@
 import {test,expect} from '@playwright/test';
+import {readFileSync} from 'node:fs';
+import {applyRemovals} from '../public/model.js';
+import {REMOVED_BY_ID} from '../public/removals.js';
+// Expected pool sizes derive from the committed catalog so automatic data updates do not need test edits.
+const pool = applyRemovals(JSON.parse(readFileSync(new URL('../public/catalog.json',import.meta.url),'utf8')),REMOVED_BY_ID);
+const greaterCount = pool.trinkets.filter(c=>c.kind==='Greater').length;
 test.beforeEach(async({page})=>{
   await page.route('https://art.hearthstonejson.com/**',route=>route.abort());
   await page.route('https://fonts.googleapis.com/**',route=>route.abort());
-  await page.goto('/'); await expect(page.locator('#result-count')).toContainText('279 minions');
+  await page.goto('/'); await expect(page.locator('#result-count')).toContainText(`${pool.minions.length} minions`);
 });
 test('pool is the catalog minus announced removals, dated and sourced',async({page})=>{
   const notice = page.locator('.notice');
@@ -16,7 +22,7 @@ test('pool is the catalog minus announced removals, dated and sourced',async({pa
   await expect(page.locator('.pool-card')).toHaveCount(0);
   await page.getByLabel('Search name or description').fill('');
   await page.getByRole('button',{name:'Trinkets',exact:true}).click();
-  await expect(page.locator('#result-count')).toContainText('411 trinkets');
+  await expect(page.locator('#result-count')).toContainText(`${pool.trinkets.length} trinkets`);
   for(const name of ['Kaleidoscope','Errgl Sticker']){
     await page.getByLabel('Search name or description').fill(name);
     await expect(page.locator('.pool-card')).toHaveCount(0);
@@ -32,16 +38,16 @@ test('search and combined filters, no matches and reset, trinket type without ti
   await page.getByLabel('Search name or description').fill('zzzznomatch');
   await expect(page.locator('.no-results')).toBeVisible();
   await page.getByRole('button',{name:'Reset filters'}).click();
-  await expect(page.locator('.pool-card')).toHaveCount(279);
+  await expect(page.locator('.pool-card')).toHaveCount(pool.minions.length);
   await page.getByRole('button',{name:'Trinkets',exact:true}).click();
   await expect(page.getByLabel('Tavern tier')).toBeHidden();
   await page.getByLabel('Trinket type').selectOption('Greater');
   await expect(page.locator('.pool-card')).toHaveCount(213);
   await page.getByLabel('Search name or description').fill('portrait');
-  const count=await page.locator('.pool-card').count();expect(count).toBeGreaterThan(0);expect(count).toBeLessThan(213);
+  const count=await page.locator('.pool-card').count();expect(count).toBeGreaterThan(0);expect(count).toBeLessThan(greaterCount);
   await expect(page.locator('.pool-card').first().locator('.card-meta')).toContainText('Greater trinket · Cost');
   await expect(page.locator('.pool-card').first().locator('.card-meta')).not.toContainText('Tier');
-  await page.getByRole('button',{name:'Reset filters'}).click();await expect(page.locator('.pool-card')).toHaveCount(411);
+  await page.getByRole('button',{name:'Reset filters'}).click();await expect(page.locator('.pool-card')).toHaveCount(pool.trinkets.length);
 });
 test('seven and two fixed slots, limits, reorder, removal and independent clear',async({page})=>{
   await expect(page.locator('#board .slot')).toHaveCount(7);await expect(page.locator('#trinket-slots .slot')).toHaveCount(2);

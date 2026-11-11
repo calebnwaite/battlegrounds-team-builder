@@ -1,0 +1,49 @@
+name: Update Battlegrounds data
+
+# Checks HearthstoneJSON weekly for a newer build and opens a pull request when the
+# Battlegrounds catalog changed. It never commits to main; a person reviews and merges.
+on:
+  schedule:
+    - cron: '17 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: update-data
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Update catalog from the newest HearthstoneJSON build
+        run: node scripts/update.js --summary update-summary.md
+      - run: npm test
+      - run: npm run lint
+      - run: npm run typecheck
+      - name: Browser tests (offline subset)
+        run: |
+          npx playwright install --with-deps chromium
+          npx playwright test tests/browser.test.js tests/subpath.test.js
+      - name: Open pull request
+        uses: peter-evans/create-pull-request@3ffccacd46053766916f087ce41d627c0b8cf2d1 # v8.1.3
+        with:
+          branch: automation/update-battlegrounds-data
+          base: main
+          add-paths: |
+            public/catalog.json
+            public/build.json
+          commit-message: 'Update Battlegrounds data from HearthstoneJSON'
+          title: 'Update Battlegrounds data from HearthstoneJSON'
+          body-path: update-summary.md
+          labels: data-update
