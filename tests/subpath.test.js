@@ -31,7 +31,7 @@ test.beforeAll(async () => {
       res.writeHead(404).end('Not found');
     }
   });
-  await new Promise((resolve, reject) => { server.once('error', reject); server.listen(PORT, '127.0.0.1', resolve); });
+  await new Promise((resolve, reject) => { server.once('error', reject); server.listen(PORT, '127.0.0.1', () => resolve(undefined)); });
 });
 test.afterAll(() => new Promise(resolve => server.close(resolve)));
 
