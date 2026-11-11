@@ -12,7 +12,7 @@ test.beforeEach(async({page})=>{
 });
 test('pool is the catalog minus announced removals, dated and sourced',async({page})=>{
   const notice = page.locator('.notice');
-  await expect(notice).toContainText('minus officially announced removals as of October 30, 2026; other changes may be missed');
+  await expect(notice).toContainText('minus officially announced removals as of November 11, 2026; other changes may be missed');
   await expect(notice).toContainText('not verified');
   await expect(notice.getByRole('link',{name:'Season 14 includes Trinkets'})).toHaveAttribute('href','https://hearthstone.blizzard.com/en-us/news/24290433/announcing-battlegrounds-season-14-dark-gifts-of-dalaran');
   await expect(notice.getByRole('link',{name:'official rotation changes'})).toHaveAttribute('href','https://hearthstone.blizzard.com/en-us/news/24302091/aberrations-join-battlegrounds-at-blizzcon');

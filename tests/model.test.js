@@ -47,7 +47,7 @@ import {applyRemovals} from '../public/model.js';
 test('announced removals: every group has its official source; ids missing from the catalog only warn',()=>{
   for(const group of REMOVAL_GROUPS){assert.match(group.url,/^https:\/\/hearthstone\.blizzard\.com\//);assert.ok(group.date&&group.reason);}
   for(const id of staleOverrides(data,REMOVED_BY_ID.keys()))console.warn(`Warning: removals.js lists ${id}, which is not in the catalog.`);
-  assert.equal(REMOVED_BY_ID.size,31);
+  assert.equal(REMOVED_BY_ID.size,REMOVAL_GROUPS.reduce((n,g)=>n+g.cards.length,0));
 });
 test('removals drop every Naga, Kaleidoscope and Errgl Sticker from the default pool',()=>{
   const pool=applyRemovals(data,REMOVED_BY_ID);
