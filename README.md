@@ -26,9 +26,9 @@ On the development computer npm was absent from PATH; a local ignored bootstrap 
 
 ## Data provenance and reproduction
 
-Source: https://api.hearthstonejson.com/v1/255790/enUS/cards.json (HearthstoneJSON/HearthSim), build **37.0.0.255790**, Last-Modified October 13, 2026, retrieved October 27, 2026. SHA256: `06e61ce4afd2bce9c2ff53de8c2c1cc0080df27aa4743c8eee3d63894d10dc04`.
+Source: HearthstoneJSON/HearthSim (`https://api.hearthstonejson.com/v1/<build>/enUS/cards.json`). `public/build.json` is the source of truth for the current build, URL, SHA256, Last-Modified and retrieval date; this README deliberately names none of them because automatic updates change them. The original pin was build 255790.
 
-The pin (build number, URL, SHA256, Last-Modified and retrieval date) lives in `public/build.json`; the build recorded above is the initial pin and `build.json` is authoritative after automatic updates. To regenerate the catalog from a download of the pinned build, store it outside the served directory, then run:
+The pin (build number, URL, SHA256, Last-Modified and retrieval date) lives in `public/build.json`; `build.json` is authoritative, including after automatic updates. To regenerate the catalog from a download of the pinned build, store it outside the served directory, then run:
 
 ```powershell
 node scripts/extract.js path-to-downloaded-cards.json

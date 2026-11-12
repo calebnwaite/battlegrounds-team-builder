@@ -20,11 +20,11 @@ The official news index reviewed through October 20 still identifies Season 14 a
 
 The official [Battlegrounds card library](https://hearthstone.blizzard.com/en-us/battlegrounds/) rendered “No results found in Battlegrounds” during this review. That is an unavailable verification source, not evidence of an empty pool. The patch articles are incremental changes rather than a complete machine-readable current roster.
 
-The newest HearthstoneJSON build (checked October 30, still 255790) contains the Naga minions and removed trinkets despite the official notices, hence the exclusion list above. Trinket availability as a seasonal mechanic is verified; exhaustive active Lesser/Greater membership, lobby-specific eligibility, later hotfixes and full artwork coverage are **not verified**. No fabricated active flag is supplied; only announced removals are subtracted. Tier 7 and Duos entries are retained and labeled; selection does not imply legality.
+The newest HearthstoneJSON build (as originally reviewed on October 30, still the original pin 255790) contains the Naga minions and removed trinkets despite the official notices, hence the exclusion list above. Trinket availability as a seasonal mechanic is verified; exhaustive active Lesser/Greater membership, lobby-specific eligibility, later hotfixes and full artwork coverage are **not verified**. No fabricated active flag is supplied; only announced removals are subtracted. Tier 7 and Duos entries are retained and labeled; selection does not imply legality.
 
 ## Data and artwork
 
-See README for the pinned build URL, hash, extraction rules and reproduction. HearthstoneJSON/HearthSim supplies data and square artwork; Blizzard owns the game content. No HSReplay data, layout or assets are extracted. Successful representative image decoding does not certify all 721 catalog assets. Offline/error artwork remains an explicitly tested fallback.
+This file describes the originally reviewed pin (build 255790). See README for extraction rules and reproduction, and `public/build.json` for the current build, URL and hash. HearthstoneJSON/HearthSim supplies data and square artwork; Blizzard owns the game content. No HSReplay data, layout or assets are extracted. Successful representative image decoding does not certify all 721 catalog assets. Offline/error artwork remains an explicitly tested fallback.
 
 ## Keeping data current
 

@@ -4,6 +4,7 @@ import {applyRemovals} from '../public/model.js';
 import {REMOVED_BY_ID} from '../public/removals.js';
 // Expected pool sizes derive from the committed catalog so automatic data updates do not need test edits.
 const pool = applyRemovals(JSON.parse(readFileSync(new URL('../public/catalog.json',import.meta.url),'utf8')),REMOVED_BY_ID);
+const build = JSON.parse(readFileSync(new URL('../public/build.json',import.meta.url),'utf8'));
 const greaterCount = pool.trinkets.filter(c=>c.kind==='Greater').length;
 test.beforeEach(async({page})=>{
   await page.route('https://art.hearthstonejson.com/**',route=>route.abort());
@@ -29,6 +30,10 @@ test('pool is the catalog minus announced removals, dated and sourced',async({pa
   }
 });
 
+test('header badge and footer show the build from build.json',async({page})=>{
+  await expect(page.locator('#build-badge')).toHaveText(`CATALOG ${build.build} · MINUS REMOVALS`);
+  await expect(page.locator('#build-info')).toHaveText(`${build.build}, retrieved ${build.retrieved}`);
+});
 test('search and combined filters, no matches and reset, trinket type without tier',async({page})=>{
   await page.getByLabel('Search name or description').fill('blood gem');
   await page.getByLabel('Tribe / type').selectOption('QUILBOAR');

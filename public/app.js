@@ -103,12 +103,13 @@ function bindClear(id, slots) {el(id).addEventListener('click', () => {slots.fil
 bindClear('clear-board',board);
 bindClear('clear-trinkets',trinkets);
 renderSelections();
-/** Footer build line comes from build.json, which the update script rewrites. */
+/** Header badge and footer build line both come from build.json, which the update script rewrites. */
 async function showBuildInfo() {
   try {
     const response = await fetch('build.json');
     if (!response.ok) throw new Error(`Build info HTTP ${response.status}`);
     const info = await response.json();
+    el('build-badge').textContent = `CATALOG ${info.build} · MINUS REMOVALS`;
     el('build-info').textContent = `${info.build}, retrieved ${info.retrieved}`;
   } catch (error) {console.error('Build info unavailable:',error);}
 }
