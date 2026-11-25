@@ -2,8 +2,10 @@ import {test,expect} from '@playwright/test';
 import {readFileSync} from 'node:fs';
 import {applyRemovals} from '../public/model.js';
 import {REMOVED_BY_ID} from '../public/removals.js';
+import {seasonPool} from '../public/season.js';
 // Expected pool sizes derive from the committed catalog so automatic data updates do not need test edits.
-const pool = applyRemovals(JSON.parse(readFileSync(new URL('../public/catalog.json',import.meta.url),'utf8')),REMOVED_BY_ID);
+const catalog = JSON.parse(readFileSync(new URL('../public/catalog.json',import.meta.url),'utf8'));
+const pool = {...applyRemovals(catalog,REMOVED_BY_ID),minions:seasonPool(catalog).minions};
 const build = JSON.parse(readFileSync(new URL('../public/build.json',import.meta.url),'utf8'));
 const greaterCount = pool.trinkets.filter(c=>c.kind==='Greater').length;
 test.beforeEach(async({page})=>{
@@ -13,7 +15,7 @@ test.beforeEach(async({page})=>{
 });
 test('pool is the catalog minus announced removals, dated and sourced',async({page})=>{
   const notice = page.locator('.notice');
-  await expect(notice).toContainText('minus officially announced removals as of November 11, 2026; other changes may be missed');
+  await expect(notice).toContainText('Season 15 / Patch 37.2 changes entered by hand from Blizzard');
   await expect(notice).toContainText('not verified');
   await expect(notice.getByRole('link',{name:'Season 14 includes Trinkets'})).toHaveAttribute('href','https://hearthstone.blizzard.com/en-us/news/24290433/announcing-battlegrounds-season-14-dark-gifts-of-dalaran');
   await expect(notice.getByRole('link',{name:'official rotation changes'})).toHaveAttribute('href','https://hearthstone.blizzard.com/en-us/news/24302091/aberrations-join-battlegrounds-at-blizzcon');
