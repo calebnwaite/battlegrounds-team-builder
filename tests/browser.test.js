@@ -2,10 +2,11 @@ import {test,expect} from '@playwright/test';
 import {readFileSync} from 'node:fs';
 import {applyRemovals} from '../public/model.js';
 import {REMOVED_BY_ID} from '../public/removals.js';
+import {TIMEWARP_CARDS} from '../public/timewarp.js';
 // Expected pool sizes derive from the committed catalog so automatic data updates do not need test edits.
 const pool = applyRemovals(JSON.parse(readFileSync(new URL('../public/catalog.json',import.meta.url),'utf8')),REMOVED_BY_ID);
 const build = JSON.parse(readFileSync(new URL('../public/build.json',import.meta.url),'utf8'));
-const greaterCount = pool.trinkets.filter(c=>c.kind==='Greater').length;
+const minorCount = TIMEWARP_CARDS.filter(c=>c.stage==='minor').length;
 test.beforeEach(async({page})=>{
   await page.route('https://art.hearthstonejson.com/**',route=>route.abort());
   await page.route('https://fonts.googleapis.com/**',route=>route.abort());
@@ -22,19 +23,17 @@ test('pool is the catalog minus announced removals, dated and sourced',async({pa
   await page.getByLabel('Search name or description').fill('Waverider');
   await expect(page.locator('.pool-card')).toHaveCount(0);
   await page.getByLabel('Search name or description').fill('');
-  await page.getByRole('button',{name:'Trinkets',exact:true}).click();
-  await expect(page.locator('#result-count')).toContainText(`${pool.trinkets.length} trinkets`);
-  for(const name of ['Kaleidoscope','Errgl Sticker']){
-    await page.getByLabel('Search name or description').fill(name);
-    await expect(page.locator('.pool-card')).toHaveCount(0);
-  }
+  await page.getByRole('button',{name:'Timewarp',exact:true}).click();
+  await expect(page.locator('#result-count')).toContainText(`${TIMEWARP_CARDS.length} Timewarp cards`);
+  await expect(page.locator('#result-count')).toContainText('Patch 37.2 preview notes');
+  await expect(page.getByRole('button',{name:'Trinkets',exact:true})).toHaveCount(0);
 });
 
 test('header badge and footer show the build from build.json',async({page})=>{
   await expect(page.locator('#build-badge')).toHaveText(`CATALOG ${build.build} · MINUS REMOVALS`);
   await expect(page.locator('#build-info')).toHaveText(`${build.build}, retrieved ${build.retrieved}`);
 });
-test('search and combined filters, no matches and reset, trinket type without tier',async({page})=>{
+test('search and combined filters, no matches and reset, Timewarp stage and card type without tier',async({page})=>{
   await page.getByLabel('Search name or description').fill('blood gem');
   await page.getByLabel('Tribe / type').selectOption('QUILBOAR');
   await page.getByLabel('Tavern tier').selectOption('1');
@@ -44,18 +43,23 @@ test('search and combined filters, no matches and reset, trinket type without ti
   await expect(page.locator('.no-results')).toBeVisible();
   await page.getByRole('button',{name:'Reset filters'}).click();
   await expect(page.locator('.pool-card')).toHaveCount(pool.minions.length);
-  await page.getByRole('button',{name:'Trinkets',exact:true}).click();
-  await expect(page.getByLabel('Tavern tier')).toBeHidden();
-  await page.getByLabel('Trinket type').selectOption('Greater');
-  await expect(page.locator('.pool-card')).toHaveCount(greaterCount);
-  await page.getByLabel('Search name or description').fill('portrait');
-  const count=await page.locator('.pool-card').count();expect(count).toBeGreaterThan(0);expect(count).toBeLessThan(greaterCount);
-  await expect(page.locator('.pool-card').first().locator('.card-meta')).toContainText('Greater trinket · Cost');
-  await expect(page.locator('.pool-card').first().locator('.card-meta')).not.toContainText('Tier');
-  await page.getByRole('button',{name:'Reset filters'}).click();await expect(page.locator('.pool-card')).toHaveCount(pool.trinkets.length);
+  await page.getByRole('button',{name:'Timewarp',exact:true}).click();
+  await expect(page.getByLabel('Tavern tier')).toBeHidden();await expect(page.getByLabel('Tribe / type')).toBeHidden();
+  await expect(page.locator('.pool-card')).toHaveCount(TIMEWARP_CARDS.length);
+  await page.getByLabel('Timewarp stage').selectOption('minor');
+  await expect(page.locator('.pool-card')).toHaveCount(minorCount);
+  await page.getByLabel('Search name or description').fill('piggy bank');
+  const piggy=page.locator('.pool-card');await expect(piggy).toHaveCount(1);
+  await expect(piggy.locator('.card-meta').first()).toContainText('Minor Timewarp · Tier 3 · 1 Chronum · Tavern spell');
+  await expect(piggy).toContainText('Gain 2 Gold. (Upgrades each turn!)');await expect(piggy.locator('.badge')).toHaveText('New');
+  await expect(piggy).toContainText('Patch 37.2 (preview notes)');
+  await page.getByLabel('Timewarp stage').selectOption('major');await expect(page.locator('.pool-card')).toHaveCount(0);
+  await page.getByRole('button',{name:'Reset filters'}).click();await expect(page.locator('.pool-card')).toHaveCount(TIMEWARP_CARDS.length);
+  await page.getByLabel('Card type').selectOption('spell');
+  const spells=TIMEWARP_CARDS.filter(c=>c.cardType==='spell').length;await expect(page.locator('.pool-card')).toHaveCount(spells);
 });
-test('seven and two fixed slots, limits, reorder, removal and independent clear',async({page})=>{
-  await expect(page.locator('#board .slot')).toHaveCount(7);await expect(page.locator('#trinket-slots .slot')).toHaveCount(2);
+test('seven board slots and two Timewarp slots, limits, reorder, removal and independent clear',async({page})=>{
+  await expect(page.locator('#board .slot')).toHaveCount(7);await expect(page.locator('#timewarp-slots .slot')).toHaveCount(2);
   await page.getByLabel('Search name or description').fill('Razorfen Geomancer');
   const add=page.getByRole('button',{name:'Add Razorfen Geomancer',exact:true});
   for(let i=0;i<7;i++) await add.click();
@@ -67,13 +71,25 @@ test('seven and two fixed slots, limits, reorder, removal and independent clear'
   await expect(page.locator('#board .slot').nth(0)).toHaveClass(/empty/);await expect(page.locator('#board .slot').nth(1)).toContainText('Razorfen Geomancer');
   await expect(page.locator('#board .slot').nth(1)).toBeFocused();
   await add.click(); await expect(page.locator('#board-count')).toHaveText('7 / 7');
-  await page.getByRole('button',{name:'Reset filters'}).click();await page.getByRole('button',{name:'Trinkets',exact:true}).click();
-  const tadd=page.locator('.pool-card button').first();await tadd.click();await tadd.click();await tadd.click();
-  await expect(page.getByRole('status')).toContainText('Trinket selection is full');
-  await expect(page.locator('#trinket-slots .slot')).toHaveCount(2);await expect(page.locator('#trinket-slots .filled')).toHaveCount(2);
-  await page.locator('#trinket-slots button').first().click();await expect(page.locator('#trinket-count')).toHaveText('1 / 2');
-  await page.getByRole('button',{name:'Clear board',exact:true}).click();await expect(page.locator('#board .empty')).toHaveCount(7);await expect(page.locator('#trinket-count')).toHaveText('1 / 2');
-  await page.getByRole('button',{name:'Clear trinkets',exact:true}).click();await expect(page.locator('#trinket-slots .empty')).toHaveCount(2);
+  await page.getByRole('button',{name:'Reset filters'}).click();await page.getByRole('button',{name:'Timewarp',exact:true}).click();
+  await page.getByLabel('Timewarp stage').selectOption('minor');
+  const first=page.locator('.pool-card button').first();await first.click();await first.click();
+  await expect(page.getByRole('status')).toContainText('Minor Timewarp slot is taken');
+  await expect(page.locator('#timewarp-slots .filled')).toHaveCount(1);
+  await expect(page.getByRole('article',{name:'Minor Timewarp slot'})).toHaveClass(/filled/);await expect(page.getByRole('article',{name:'Major Timewarp slot'})).toHaveClass(/empty/);
+  await page.getByLabel('Timewarp stage').selectOption('major');await page.locator('.pool-card button').first().click();
+  await expect(page.locator('#timewarp-count')).toHaveText('2 / 2');await expect(page.locator('#timewarp-slots .filled')).toHaveCount(2);
+  await page.locator('#timewarp-slots button').first().click();await expect(page.locator('#timewarp-count')).toHaveText('1 / 2');
+  await page.getByRole('button',{name:'Clear board',exact:true}).click();await expect(page.locator('#board .empty')).toHaveCount(7);await expect(page.locator('#timewarp-count')).toHaveText('1 / 2');
+  await page.getByRole('button',{name:'Clear Timewarp picks',exact:true}).click();await expect(page.locator('#timewarp-slots .empty')).toHaveCount(2);
+});
+test('new Timewarp cards without artwork show an intentional fallback, returning ones request real art',async({page})=>{
+  const requested=[];page.on('request',r=>{if(r.url().startsWith('https://art.hearthstonejson.com/'))requested.push(r.url());});
+  await page.getByRole('button',{name:'Timewarp',exact:true}).click();
+  const synthetic=TIMEWARP_CARDS.filter(c=>c.id.startsWith('S15_TW_')).length;
+  await expect(page.locator('.pool-card .art.unavailable')).toHaveCount(synthetic);
+  await expect(page.locator('.pool-card .art.unavailable').first()).toContainText('art pending');
+  expect(requested.some(url=>url.includes('S15_TW_'))).toBe(false);
 });
 test('failed art stays usable and mobile layout has no horizontal overflow',async({page})=>{
   await expect(page.locator('.pool-card .unavailable').first()).toContainText('Art unavailable');

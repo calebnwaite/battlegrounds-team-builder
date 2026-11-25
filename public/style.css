@@ -31,13 +31,13 @@ h3{font-size:15px;line-height:1.35;font-weight:600}
 .description{white-space:pre-line;font-size:12px;line-height:1.6;color:#c5cfcb;margin:0}
 .slot-controls{display:flex;gap:4px;padding:8px;flex-wrap:wrap}
 .slot-controls button{font-size:11px;padding:7px;flex:1}
-.trinket-head{margin-top:25px;margin-bottom:14px}
-.trinket-slots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;max-width:660px}
-.trinket-slots .empty{min-height:115px}
-.trinket-slots .filled{display:grid;grid-template-columns:96px 1fr}
-.trinket-slots .art{height:100%;min-height:120px}
-.trinket-slots .slot-controls{grid-column:2}
-.trinket-slots .card-body{padding-left:15px}
+.timewarp-head{margin-top:25px;margin-bottom:14px}
+.timewarp-slots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;max-width:660px}
+.timewarp-slots .empty{min-height:115px}
+.timewarp-slots .filled{display:grid;grid-template-columns:96px 1fr}
+.timewarp-slots .art{height:100%;min-height:120px}
+.timewarp-slots .slot-controls{grid-column:2}
+.timewarp-slots .card-body{padding-left:15px}
 button,input,select{font:inherit}
 button{border:1px solid #4e625b;background:#30463b;color:#f0eee4;padding:10px 15px;border-radius:7px;cursor:pointer;font-size:12px;font-weight:600}
 button:hover{background:#425f50;border-color:var(--green)}
@@ -78,7 +78,7 @@ h1{letter-spacing:-2px}
 .workbench{padding:14px}
 .board{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
 .slot.empty{min-height:175px}
-.trinket-slots{grid-template-columns:1fr}
+.timewarp-slots{grid-template-columns:1fr}
 .filters{padding:13px;gap:12px}
 .filters label{flex:1;min-width:115px}
 .filters .search{flex-basis:100%}
@@ -94,3 +94,6 @@ header p{font-size:14px}
 }
 
 .removed-flag{margin:.4rem 0 0;padding:.25rem .5rem;border:1px solid #d98a4a;border-radius:6px;color:#ffd2a8;font-size:.8rem}
+.badge{display:inline-block;padding:2px 8px;border:1px solid var(--muted);border-radius:6px;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+.badge.new{border-color:var(--green);color:var(--green)}
+.badge.changed{border-color:#d98a4a;color:#ffd2a8}

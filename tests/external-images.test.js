@@ -2,18 +2,18 @@ import {readFileSync} from 'node:fs';
 import {test,expect} from '@playwright/test';
 import {applyRemovals} from '../public/model.js';
 import {REMOVED_BY_ID} from '../public/removals.js';
+import {TIMEWARP_CARDS} from '../public/timewarp.js';
 
 const catalog = JSON.parse(readFileSync(new URL('../public/catalog.json',import.meta.url),'utf8'));
 const samples = [
   {id:'BG20_100',pool:'minions'},
-  {id:'BG30_MagicItem_301',pool:'trinkets'},
-  {id:'BG30_MagicItem_310',pool:'trinkets'},
+  {id:'BG34_Giant_362',pool:'timewarp'}, // Timewarped Goldrinn, a returning Major Timewarp card with real artwork
 ];
 
 // Live service checks are separate from deterministic UI/failure-path tests.
 for (const {id,pool} of samples) test(`external artwork decodes: ${id}`,async({page},testInfo)=>{
   test.setTimeout(45000);
-  const card = catalog[pool].find(item=>item.id===id);
+  const card = (pool==='timewarp' ? TIMEWARP_CARDS : catalog[pool]).find(item=>item.id===id);
   expect(card,`Pinned catalog must contain the known image sample ${id}`).toBeTruthy();
   const artUrl = `https://art.hearthstonejson.com/v1/256x/${id}.jpg`;
   await page.route('https://art.hearthstonejson.com/**',route=>route.request().url()===artUrl ? route.continue() : route.abort());
@@ -28,7 +28,7 @@ for (const {id,pool} of samples) test(`external artwork decodes: ${id}`,async({p
   try {
     await page.goto('/');
     await expect(page.locator('#result-count')).toContainText(`${applyRemovals(catalog,REMOVED_BY_ID).minions.length} minions`);
-    if(pool==='trinkets') await page.getByRole('button',{name:'Trinkets',exact:true}).click();
+    if(pool==='timewarp') await page.getByRole('button',{name:'Timewarp',exact:true}).click();
     await page.getByLabel('Search name or description').fill(card.name);
     const tile = page.locator('.pool-card').filter({has:page.getByRole('heading',{name:card.name,exact:true})}).filter({has:page.locator(`img[src$="/${id}.jpg"]`)});
     await expect(tile).toHaveCount(1);
