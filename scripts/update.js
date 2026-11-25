@@ -1,6 +1,7 @@
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 import {REMOVED_BY_ID} from '../public/removals.js';
+import {handEntries} from '../public/season.js';
 import {parseArgs, USAGE} from './lib/args.js';
 import {runUpdate} from './lib/update.js';
 
@@ -13,7 +14,7 @@ try {
   process.exit(2);
 }
 try {
-  await runUpdate({root, check: options.check, removedIds: REMOVED_BY_ID.keys(), summaryPath: path.resolve(options.summary ?? path.join(root, 'update-summary.md'))});
+  await runUpdate({root, check: options.check, removedIds: REMOVED_BY_ID.keys(), handEntries: handEntries(), summaryPath: path.resolve(options.summary ?? path.join(root, 'update-summary.md'))});
 } catch (error) {
   console.error(`Update failed: ${error.message}`);
   process.exitCode = 1;
