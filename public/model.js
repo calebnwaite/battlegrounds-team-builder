@@ -1,4 +1,4 @@
-/** @typedef {{id: string, name: string, description: string, types: string[], tier?: number, kind?: string, cost?: number | null, duos?: boolean}} Card */
+/** @typedef {{id: string, name: string, description: string, types: string[], tier?: number, kind?: string, cost?: number | null, duos?: boolean, attack?: number, health?: number, spell?: boolean, handEntered?: boolean, patch?: string, change?: string, disputed?: string, flag?: string}} Card */
 /** Plain text only; source markup is never interpreted as HTML. */
 export function plainText(text = '') {
   return text.replace(/\[x\]/g, '').replace(/<br\s*\/?\s*>/gi, '\n').replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').trim();
