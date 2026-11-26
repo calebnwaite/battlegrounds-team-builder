@@ -3,11 +3,14 @@ import {spawnSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {parseArgs} from '../scripts/lib/args.js';
 import assert from 'node:assert/strict';
-import {mkdtempSync, mkdirSync, readFileSync, existsSync, writeFileSync} from 'node:fs';
+import {mkdtempSync, mkdirSync, readFileSync, readdirSync, existsSync, writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
 import {buildCatalog, diffCatalogs, sha256, staleOverrides} from '../scripts/lib/catalog.js';
 import {resolveLatestBuild, runUpdate} from '../scripts/lib/update.js';
+import {handEntries, seasonPool} from '../public/season.js';
+import {REMOVED_BY_ID} from '../public/removals.js';
+import {REMOVED_MINIONS} from '../public/season15/removed.js';
 
 const minion = (id, extra = {}) => ({id, name: id, text: 'Text', type: 'MINION', isBattlegroundsPoolMinion: true, techLevel: 1, races: ['BEAST'], ...extra});
 const trinket = (id, extra = {}) => ({id, name: id, text: '', type: 'BATTLEGROUND_TRINKET', spellSchool: 'LESSER_TRINKET', cost: 3, ...extra});
@@ -150,4 +153,80 @@ test('update.js exits non-zero with usage on an unknown argument, before touchin
   const result = spawnSync(process.execPath, [fileURLToPath(new URL('../scripts/update.js', import.meta.url)), '--check;'], {encoding: 'utf8'});
   assert.equal(result.status, 2);
   assert.match(result.stderr, /Unknown argument: "--check;"[\s\S]*Usage:/);
+});
+
+// Season 15 guard: hand-entered preview-notes data must survive any HearthstoneJSON update.
+const realCatalog = JSON.parse(readFileSync(new URL('../public/catalog.json', import.meta.url), 'utf8'));
+const asRaw = catalog => [
+  ...catalog.minions.map(c => minion(c.id, {name: c.name, text: c.description, techLevel: c.tier, races: c.types, isBattlegroundsDuosExclusive: c.duos})),
+  ...catalog.trinkets.map(c => trinket(c.id, {name: c.name, text: c.description, spellSchool: c.kind === 'Lesser' ? 'LESSER_TRINKET' : 'GREATER_TRINKET', cost: c.cost, races: c.types})),
+  ...catalog.spells.map(c => ({id: c.id, name: c.name, text: c.description, type: 'BATTLEGROUND_SPELL', isBattlegroundsPoolSpell: true, techLevel: c.tier, cost: c.cost, isBattlegroundsDuosExclusive: c.duos})),
+];
+function makeRealRoot() {
+  const root = mkdtempSync(path.join(tmpdir(), 'bg-s15-test-'));
+  mkdirSync(path.join(root, 'public'));
+  writeFileSync(path.join(root, 'public', 'catalog.json'), JSON.stringify(realCatalog));
+  writeFileSync(path.join(root, 'public', 'build.json'), JSON.stringify({build: 100, url: 'u', sha256: 'x', lastModified: '2026-10-13', retrieved: '2026-10-27'}));
+  return root;
+}
+const seasonSourceFiles = ['season.js', 'removals.js', ...readdirSync(new URL('../public/season15/', import.meta.url)).map(f => `season15/${f}`)];
+const seasonSources = () => seasonSourceFiles.map(f => readFileSync(new URL(`../public/${f}`, import.meta.url), 'utf8'));
+const handCards = pool => [...pool.minions, ...pool.spells].filter(c => c.handEntered);
+
+test('a download of older HearthstoneJSON data cannot change hand-entered Season 15 cards or the pool membership', async () => {
+  const sourcesBefore = seasonSources();
+  const beforePool = seasonPool(realCatalog);
+  // An "older" build: pre-Season 15 values (the committed catalog) plus one unrelated new card.
+  const raw = [...asRaw(realCatalog), minion('BG_SOMETHING_NEW', {name: 'Something New'})];
+  const root = makeRealRoot();
+  const result = await runUpdate({root, fetchImpl: fakeFetch(101, raw).impl, handEntries: handEntries(), removedIds: REMOVED_BY_ID.keys(), now: new Date('2026-11-30T00:00:00Z'), ...quiet});
+  assert.equal(result.written, true);
+  const afterCatalog = JSON.parse(read(root, 'catalog.json'));
+  assert.ok(afterCatalog.minions.some(c => c.id === 'BG_SOMETHING_NEW'));
+  const afterPool = seasonPool(afterCatalog);
+  assert.deepEqual(handCards(afterPool), handCards(beforePool));
+  assert.deepEqual(afterPool.minions.map(c => c.id).sort(), [...beforePool.minions.map(c => c.id), 'BG_SOMETHING_NEW'].sort());
+  assert.deepEqual(afterPool.spells, beforePool.spells);
+  for (const [id] of REMOVED_MINIONS) assert.ok(!afterPool.minions.some(c => c.id === id), id);
+  assert.deepEqual(seasonSources(), sourcesBefore, 'the update must never edit the Season 15 data files');
+  assert.deepEqual(readdirSync(path.join(root, 'public')).sort(), ['build.json', 'catalog.json']);
+});
+
+test('older data that re-adds a changed card cannot undo the hand-entered change', () => {
+  const stale = {...realCatalog, minions: realCatalog.minions.map(c => c.name === 'Shoalfin Mystic' ? {...c, tier: 3} : c)};
+  const mystic = seasonPool(stale).minions.find(c => c.name === 'Shoalfin Mystic');
+  assert.deepEqual([mystic.tier, mystic.attack, mystic.health], [2, 3, 3]);
+});
+
+test('hand entries that a newer build now has are listed for retirement, matched by id or name; hand data stays in force', async () => {
+  const raw = asRaw(realCatalog);
+  raw.push(minion('BG_CFM_315', {name: 'Alleycat'})); // returning minion: matched by id
+  raw.push(minion('BG99_001', {name: 'Erupting Eyestalk'})); // new minion: matched by name, different id
+  const mystic = realCatalog.minions.find(c => c.name === 'Shoalfin Mystic');
+  raw.splice(raw.findIndex(c => c.id === mystic.id), 1, minion(mystic.id, {name: mystic.name, techLevel: 2, text: mystic.description, races: mystic.types})); // override now matches
+  const summaryPath = path.join(makeRealRoot(), 'summary.md');
+  const root = makeRealRoot();
+  await runUpdate({root, summaryPath, fetchImpl: fakeFetch(101, raw).impl, handEntries: handEntries(), ...quiet});
+  const summary = readFileSync(summaryPath, 'utf8');
+  assert.match(summary, /### Hand-entered Season 15 cards now in HearthstoneJSON/);
+  for (const name of ['Alleycat', 'Erupting Eyestalk', 'Shoalfin Mystic']) assert.match(summary, new RegExp(String.raw`- ${name} \([^)]+\): now in HearthstoneJSON: replace the hand entry`));
+  assert.doesNotMatch(summary, /- Zoatroid/);
+  assert.doesNotMatch(summary, /- Dragonstorm/);
+  const pool = seasonPool(JSON.parse(read(root, 'catalog.json')));
+  assert.deepEqual(pool.minions.filter(c => c.name === 'Erupting Eyestalk').map(c => c.id), ['S15_erupting_eyestalk']);
+  assert.equal(pool.minions.filter(c => c.name === 'Alleycat').length, 1);
+});
+
+test('with nothing to retire the summary has no hand-entry section', async () => {
+  const summaryPath = path.join(makeRealRoot(), 'summary.md');
+  await runUpdate({root: makeRealRoot(), summaryPath, fetchImpl: fakeFetch(101, asRaw(realCatalog)).impl, handEntries: handEntries(), ...quiet});
+  assert.doesNotMatch(readFileSync(summaryPath, 'utf8'), /now in HearthstoneJSON/);
+});
+
+test('catalog extraction takes only pool Tavern spells and the diff reports spell changes', () => {
+  const cards = [minion('A'), trinket('T1'), {id: 'SP1', name: 'Pool Spell', text: '<b>Do</b> it', type: 'BATTLEGROUND_SPELL', isBattlegroundsPoolSpell: true, techLevel: 2, cost: 1}, {id: 'SP2', name: 'Not Pool', type: 'BATTLEGROUND_SPELL', isBattlegroundsPoolSpell: false, techLevel: 1, cost: 1}];
+  const catalog = buildCatalog(cards);
+  assert.deepEqual(catalog.spells, [{id: 'SP1', name: 'Pool Spell', description: 'Do it', types: [], tier: 2, cost: 1, spell: true, duos: false}]);
+  const diff = diffCatalogs(catalog, {...catalog, spells: [{...catalog.spells[0], tier: 3}]});
+  assert.deepEqual(diff.changed.map(e => [e.section, e.card.id, e.fields]), [['spells', 'SP1', ['tier']]]);
 });

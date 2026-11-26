@@ -5,6 +5,9 @@
  * Only announced removals are listed; other changes may be missed.
  */
 export const REMOVALS_AS_OF = 'November 11, 2026';
+import {PREVIEW_NOTES} from './season15/sources.js';
+import {REMOVED_MINIONS} from './season15/removed.js';
+import {REMOVED_SPELLS} from './season15/spells.js';
 const ABERRATIONS = {
   url: 'https://hearthstone.blizzard.com/en-us/news/24302091/aberrations-join-battlegrounds-at-blizzcon',
   date: 'Announced 2026-09-12, effective 2026-09-22',
@@ -13,7 +16,12 @@ const PATCH_37_0_2 = {
   url: 'https://hearthstone.blizzard.com/en-us/news/24307311',
   date: '37.0.2 patch notes, 2026-11-03',
 };
+const SEASON_15 = {
+  url: PREVIEW_NOTES.url,
+  date: `Patch 37.2 preview notes read ${PREVIEW_NOTES.read}, Season 15 starts 2026-12-01`,
+};
 export const REMOVAL_GROUPS = [
+  {...SEASON_15, reason: 'Removed in Season 15 (Patch 37.2 preview notes)', cards: [...REMOVED_MINIONS, ...REMOVED_SPELLS]},
   {...ABERRATIONS, reason: 'Naga rotated out of the minion pool', cards: [
     ['BG23_000','Mini-Myrmidon'],['BG23_002','Shell Collector'],['BG23_004','Deep-Sea Angler'],['BG23_007','Waverider'],
     ['BG23_008','Glowscale'],['BG23_009','Lava Lurker'],['BG26_505','Zesty Shaker'],['BG27_514',"Sea Witch Zar'jira"],
