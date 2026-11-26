@@ -1,6 +1,7 @@
 import {matches, add, remove, move, applyRemovals} from './model.js';
 import {REMOVED_BY_ID, removalNote} from './removals.js';
 import {TIMEWARP_CARDS, STAGES, STAGE_INFO, matchesTimewarp, addTimewarp, timewarpMeta} from './timewarp.js';
+import {seasonPool} from './season.js';
 const el = id => document.getElementById(id);
 const board = Array(7).fill(null), timewarp = Array(STAGES.length).fill(null);
 /** @type {{minions: import('./model.js').Card[]}} */
@@ -38,7 +39,8 @@ function artwork(card) {
 function cardContent(card) {
   const body = node('div', 'card-body');
   body.append(node('h3', '', card.name));
-  const meta = card.stage ? timewarpMeta(card) : `Tier ${card.tier} · ${card.types.join(' / ') || 'No tribe'}${card.duos ? ' · Duos only' : ''}`;
+  const stats = card.attack !== undefined && card.health !== undefined ? ` · ${card.attack}/${card.health}` : '';
+  const meta = card.stage ? timewarpMeta(card) : `${card.tier === undefined ? 'Tier unknown' : `Tier ${card.tier}`} · ${card.types.join(' / ') || 'No tribe'}${stats}${card.duos ? ' · Duos only' : ''}`;
   body.append(node('div', 'card-meta', meta), node('p', 'description', card.description || 'No description.'));
   if (card.stage) {
     body.append(node('span', `badge ${card.status}`, card.status === 'new' ? 'New' : card.status === 'changed' ? 'Changed' : 'Returning'));
@@ -48,6 +50,9 @@ function cardContent(card) {
   }
   const removed = removalNote(card);
   if (removed) body.append(node('p', 'removed-flag', removed));
+  if (card.handEntered) body.append(node('p', 'hand-entered', `Hand-entered from Patch ${card.patch}${card.change ? `: ${card.change}` : ''}`));
+  if (card.disputed) body.append(node('p', 'removed-flag', `Disputed: ${card.disputed}`));
+  if (card.flag) body.append(node('p', 'removed-flag', `Flagged: ${card.flag}`));
   return body;
 }
 function moveBoard(index, delta) {
@@ -126,7 +131,8 @@ async function showBuildInfo() {
 try {
   const response = await fetch('catalog.json');
   if (!response.ok) throw new Error(`Catalog HTTP ${response.status}`);
-  catalog = applyRemovals(await response.json(), REMOVED_BY_ID);
+  const loaded = await response.json();
+  catalog = {...applyRemovals(loaded, REMOVED_BY_ID), minions: seasonPool(loaded).minions};
   const types = [...new Set(catalog.minions.flatMap(c => c.types))].sort();
   for (const type of types) {const option = node('option','',type); option.setAttribute('value',String(type)); el('tribe').append(option);}
   for (let tier=1;tier<=7;tier++) {const option=node('option','',`Tier ${tier}`);option.setAttribute('value',String(tier));el('tier').append(option);}

@@ -33,3 +33,12 @@ This file describes the originally reviewed pin (build 255790). See README for e
 ## 37.0.2 (November 3, 2026)
 
 [37.0.2 patch notes](https://hearthstone.blizzard.com/en-us/news/24307311) remove minion Expert Aviator and trinkets Spell-powered Wrench (Lesser) and Quilligraphy Set, Fridge Magnet and Writhing Tentacles (Greater). Build 256589 already drops Expert Aviator, so only the five trinket ids (Quilligraphy Set has a Lesser and a Greater id) were added to `public/removals.js`. The same notes retier Harbinger Aph'lass (6 to 5) and Hot-Air Surveyor (4 to 5), and move Weighted Gauntlet from Lesser to Greater; the data update carries those. Pages checked after October 1: the 36.6.3 notes (October 1; Briarback Drummer and Timewarped Thorncaller are not in the catalog) and the 37.0.2 notes. The 37.0 notes (October 12) were reviewed earlier; the news index could not be rendered, so the search was by patch-note titles and may miss unlisted announcements.
+
+## Season 15 "Warped Empire", Patch 37.2 (preview notes, read November 25, 2026)
+
+Source: [An Early Look at Battlegrounds Season 15](https://hearthstone.blizzard.com/en-us/news/24316976), a preview that launches December 1, 2026. HearthstoneJSON has none of the Season 15 cards yet, so the pool changes are entered by hand under `public/season15/`, each card labelled "37.2 (preview notes)". Order of application: removals and returns, new minions, stat and text changes, Tavern spell changes.
+
+- Minions: 108 removed (107 present in the catalog; Expert Aviator was already removed in 37.0.2, so its line is a no-op), 66 new, 42 returning (23 unchanged, 19 with changes), 24 changed (two of them, C'Thun and Y'Shaarj, are not pool cards and only carry the wording change).
+- Tavern spells: the catalog now has a `spells` list (HearthstoneJSON pool spells). 9 removed, 2 returning (Deepwater Clan, Pointy Arrow), 2 returning with changes (Echoing Roar, Sanctify), 9 new.
+- Disputed: Murcules stays in the pool (the notes keep it; hsbg.cards lists it as removed). Emerald Proto-Whelp has no HearthstoneJSON match and the notes give no tier, so it is hand-entered and flagged.
+- Heroes, buddies and hero-specific trinkets are out of scope. Incomplete preview notes can leave rotation changes missing.

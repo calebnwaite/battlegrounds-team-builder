@@ -5,6 +5,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {readFileSync} from 'node:fs';
 import {applyRemovals} from '../public/model.js';
+import {seasonPool} from '../public/season.js';
 import {REMOVED_BY_ID} from '../public/removals.js';
 
 // Mirrors GitHub Pages project hosting: the site lives under /battlegrounds-team-builder/, nothing is served at the origin root.
@@ -15,7 +16,8 @@ const mime = {'.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 't
 /** @type {import('node:http').Server} */
 let server;
 const requested = [];
-const pool = applyRemovals(JSON.parse(readFileSync(new URL('../public/catalog.json', import.meta.url), 'utf8')), REMOVED_BY_ID);
+const catalog = JSON.parse(readFileSync(new URL('../public/catalog.json', import.meta.url), 'utf8'));
+const pool = {...applyRemovals(catalog, REMOVED_BY_ID), minions: seasonPool(catalog).minions};
 
 test.beforeAll(async () => {
   server = createServer(async (req, res) => {

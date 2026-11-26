@@ -2,6 +2,7 @@ import {mkdtempSync, writeFileSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
 import {API_ROOT, buildCatalog, buildUrl, diffCatalogs, formatSummary, readJson, sha256, staleOverrides, writeBuildInfo, writeCatalog} from './catalog.js';
+import {entriesNowInCatalog} from './hand-entries.js';
 
 const isoDate = (/** @type {string | Date} */ d) => new Date(d).toISOString().slice(0, 10);
 
@@ -21,9 +22,9 @@ export async function resolveLatestBuild(fetchImpl = fetch) {
 }
 
 /**
- * @param {{root: string, check?: boolean, fetchImpl?: typeof fetch, now?: Date, removedIds?: Iterable<string>, summaryPath?: string, log?: (m: string) => void, warn?: (m: string) => void}} options
+ * @param {{root: string, check?: boolean, fetchImpl?: typeof fetch, now?: Date, removedIds?: Iterable<string>, handEntries?: import('./hand-entries.js').HandEntry[], summaryPath?: string, log?: (m: string) => void, warn?: (m: string) => void}} options
  */
-export async function runUpdate({root, check = false, fetchImpl = fetch, now = new Date(), removedIds = [], summaryPath, log = console.log, warn = console.warn}) {
+export async function runUpdate({root, check = false, fetchImpl = fetch, now = new Date(), removedIds = [], handEntries = [], summaryPath, log = console.log, warn = console.warn}) {
   const buildFile = path.join(root, 'public', 'build.json');
   const catalogFile = path.join(root, 'public', 'catalog.json');
   const pinned = readJson(buildFile);
@@ -42,7 +43,7 @@ export async function runUpdate({root, check = false, fetchImpl = fetch, now = n
   const diff = diffCatalogs(readJson(catalogFile), catalog);
   const stale = staleOverrides(catalog, removedIds);
   for (const id of stale) warn(`Warning: removals.js lists ${id}, which is not in build ${latest}; entry kept but has no effect.`);
-  const summary = formatSummary({from: pinned, to: info, diff, stale});
+  const summary = formatSummary({from: pinned, to: info, diff, stale, retired: entriesNowInCatalog(catalog, handEntries)});
   log(summary);
   if (check) { log(`--check: build ${latest} is newer than pinned ${pinned.build}; nothing written.`); return {changed: true, written: false, latest, diff}; }
 
